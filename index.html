@@ -62,7 +62,7 @@
             position: relative;
             width: 100%;
             max-width: 850px;
-            height: 100vh;
+            height: calc(100vh - 30px); /* 위아래 여백 확보 */
             max-height: 800px;
             background-image: linear-gradient(rgba(11, 12, 16, 0.85), rgba(11, 12, 16, 0.85)), url("https://raw.githubusercontent.com/KOKIM12/k-marks-space-game/refs/heads/main/galaxy.png");
             background-size: cover;
@@ -75,7 +75,7 @@
             justify-content: space-between;
             padding: 15px;
             box-sizing: border-box;
-            margin: 10px; /* 외부 최소 마진 추가 */
+            margin: 0 10px; /* 좌우 최소 여백 유지 (상하 여백은 height calc로 확보) */
         }
 
         .overlay {
@@ -88,6 +88,17 @@
             align-items: center;
             z-index: 20;
             border-radius: 12px;
+        }
+
+        .full-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.7); /* 우주 배경 위에 살짝 검은색 필터 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
         }
 
         .modal-box {
@@ -237,7 +248,7 @@
             position: relative;
             width: 100%;
             max-width: 500px;
-            background: rgba(11, 12, 16, 0.75); /* 뒷 배경이 약간 비치는 투명 박스 */
+            background: rgba(11, 12, 16, 0.45); /* 투명도를 더 주어 은은하게 비치도록 수정 */
             border: 2px solid white;
             border-radius: 15px;
             padding: 15px;
@@ -245,8 +256,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px); /* 투명해진 만큼 글씨 가독성을 위해 블러 추가 */
             transition: transform 0.1s, border-color 0.1s;
         }
 
@@ -413,18 +424,17 @@
 </head>
 <body>
 
-<div id="game-container">
-    <!-- 시작 화면 -->
-    <div id="start-screen" class="overlay">
+    <!-- 시작 화면을 컨테이너 외부로 분리 -->
+    <div id="start-screen" class="full-overlay">
         <button id="mute-btn" onclick="toggleMute()">🔊 소리 켜짐</button>
         <img src="https://raw.githubusercontent.com/KOKIM12/k-marks-space-game/refs/heads/main/space.png" id="start-screen-spaceship" alt="게임 우주선 (K-Marks)">
         
-        <!-- 타이틀 줄바꿈 및 "둠칫둠칫" 핑크 네온 컬러 강조 디자인 -->
+        <!-- 타이틀 블랙 아웃라인 제거 -->
         <h1 style="font-size: 42px; margin-bottom: 5px; text-align: center; line-height: 1.35; letter-spacing: 2px;">
-            <span style="color: var(--neon-pink); text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 15px rgba(255, 0, 127, 0.8);">둠칫둠칫</span><br>
-            <span style="color: var(--neon-blue); text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 15px rgba(69, 243, 255, 0.7); font-size: 36px;">문장부호 스페이스</span>
+            <span style="color: var(--neon-pink); text-shadow: 0 0 15px rgba(255, 0, 127, 0.8);">둠칫둠칫</span><br>
+            <span style="color: var(--neon-blue); text-shadow: 0 0 15px rgba(69, 243, 255, 0.7); font-size: 36px;">문장부호 스페이스</span>
         </h1>
-        <p style="color: #ddd; margin-bottom: 25px; font-size: 16px; text-align: center; word-break: keep-all;">떨어지는 문장의 빈칸 ( &nbsp; )이<br>판정선에 닿을 때 알맞은 부호를 누르세요!</p>
+        <p style="color: #ddd; margin-bottom: 25px; font-size: 16px; text-align: center; word-break: keep-all;">떨어지는 문장의 빈칸 <b>(&nbsp;&nbsp;&nbsp;&nbsp;)</b>가<br>판정선에 닿을 때 알맞은 부호를 누르세요!</p>
         
         <div style="display: flex; gap: 10px;">
             <button id="btn-start" onclick="startGame()">게임 시작</button>
@@ -432,12 +442,12 @@
         </div>
     </div>
 
-    <!-- 룰 설명 팝업 -->
-    <div id="rules-modal" class="overlay" style="display: none; background: rgba(0,0,0,0.95);">
+    <!-- 룰 설명 팝업도 컨테이너 외부로 분리 -->
+    <div id="rules-modal" class="full-overlay" style="display: none; background: rgba(0,0,0,0.95);">
         <div class="modal-box">
             <h2 style="color: var(--neon-blue); font-size: 26px; margin-top: 0;">🚀 게임 방법</h2>
             <p style="line-height: 1.8; color: #ddd; text-align: left; font-size: 15px; word-break: keep-all;">
-                1. 화면 위에서 문장과 함께 빈칸 <b>(  )</b>이 떨어집니다.<br>
+                1. 화면 위에서 문장과 함께 빈칸 <b>(&nbsp;&nbsp;&nbsp;&nbsp;)</b>이 떨어집니다.<br>
                 2. 빈칸이 하단의 <b style="color:var(--neon-pink)">분홍색 판정선</b>에 닿는 순간, 문장에 어울리는 부호 키를 누르세요.<br>
                 3. PC에서는 <b style="color:var(--neon-blue)">느낌표(1), 쉼표(,), 마침표(.), 물음표(/)</b> 키를 사용합니다. (쉬프트 제외)<br>
                 4. 꼬리가 길게 달린 <b style="color:var(--neon-green)">[롱노트]</b>는 꼬리가 완전히 통과할 때까지 버튼을 <b>꾹~ 누르고</b> 있어야 합니다!<br>
@@ -448,9 +458,10 @@
         </div>
     </div>
 
+<div id="game-container" style="display: none;">
     <!-- 결과 화면 -->
     <div id="gameover-screen" class="overlay" style="display: none;">
-        <h2 style="color: var(--neon-pink); text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 15px rgba(255, 0, 127, 0.6); font-size: 45px; margin-bottom: 10px;">탐사 종료!</h2>
+        <h2 style="color: var(--neon-pink); text-shadow: 0 0 15px rgba(255, 0, 127, 0.6); font-size: 45px; margin-bottom: 10px;">탐사 종료!</h2>
         <p id="final-score" style="font-size: 30px; margin-bottom: 20px; color: white; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);">최종 점수: 0점</p>
         
         <!-- 판정별 통계 리포트 -->
@@ -467,8 +478,8 @@
 
     <!-- 상단 인터페이스 -->
     <div id="top-bar">
-        <button id="home-btn" onclick="resetToHome()">🏠 처음으로</button>
-        <div id="in-game-rule">빈칸 ( &nbsp; )이 선에 닿을 때 입력! (긴 꼬리는 꾹 누르기)</div>
+        <button id="home-btn" onclick="resetToHome()">처음으로</button>
+        <div id="in-game-rule">빈칸 (&nbsp;&nbsp;&nbsp;&nbsp;)이 선에 닿을 때 입력! (긴 꼬리는 꾹 누르기)</div>
     </div>
     
     <div id="hud">
@@ -602,12 +613,12 @@
         isMuted = !isMuted;
         const muteBtn = document.getElementById('mute-btn');
         if (isMuted) {
-            introBgm.volume = 0;
+            introBgm.muted = true; // 모바일 브라우저 호환성을 위해 volume 대신 muted 속성 사용
             muteBtn.innerText = "🔇 소리 꺼짐";
             muteBtn.style.borderColor = "var(--neon-pink)";
             muteBtn.style.color = "var(--neon-pink)";
         } else {
-            introBgm.volume = 0.55;
+            introBgm.muted = false; // 모바일 브라우저 호환성을 위해 volume 대신 muted 속성 사용
             muteBtn.innerText = "🔊 소리 켜짐";
             muteBtn.style.borderColor = "var(--neon-blue)";
             muteBtn.style.color = "var(--neon-blue)";
@@ -690,6 +701,7 @@
 
     function startGame() {
         document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'flex';
         isPlaying = true;
         score = 0; combo = 0; hp = maxHp;
         noteSpeed = baseNoteSpeed;
@@ -716,6 +728,7 @@
         currentNotes = [];
         
         document.getElementById('gameover-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'none';
         document.getElementById('start-screen').style.display = 'flex';
         document.getElementById('life-display').innerText = `HP: ❤️❤️❤️❤️❤️`;
         document.getElementById('score-display').innerText = `SCORE: 0`;
@@ -769,9 +782,11 @@
         let tailHeight = 150; 
         let displayText = data.text;
         
-        // 쉼표가 아니거나 텍스트에 이미 (  )가 들어있지 않으면 끝에 추가
+        // 쉼표가 아니거나 텍스트에 이미 (  )가 들어있지 않으면 끝에 추가 및 괄호 너비 확장
         if (data.ans !== ',' && !displayText.includes('(  )')) {
-            displayText += " (  )";
+            displayText += " (&nbsp;&nbsp;&nbsp;&nbsp;)";
+        } else {
+            displayText = displayText.replace('(  )', '(&nbsp;&nbsp;&nbsp;&nbsp;)');
         }
 
         let tailHtml = '';
@@ -1001,10 +1016,10 @@
 
         playSound(isLongNote ? 800 : 600, 0.15, "sine"); 
         
-        // 정답을 맞추면 괄호 안의 문장 부호가 올바르게 드러남
+        // 정답을 맞추면 넓어진 괄호 안의 문장 부호가 올바르게 드러남
         const textNode = note.element.querySelector('.note-text');
         if (textNode) {
-            textNode.innerHTML = textNode.innerHTML.replace('(  )', `<span style="color: var(--neon-blue); font-weight: bold;">( ${note.ans} )</span>`);
+            textNode.innerHTML = textNode.innerHTML.replace('(&nbsp;&nbsp;&nbsp;&nbsp;)', `<span style="color: var(--neon-blue); font-weight: bold;">(&nbsp;${note.ans}&nbsp;)</span>`);
         }
         
         note.boxElement.style.borderColor = 'var(--neon-blue)';
