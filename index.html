@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>둠칫둠칫 문장부호 스페이스</title>
+    <style>
+        @font-face {
+            font-family: 'KblJumpExtended';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-5@1.0/KBLJump_EB_ExtendedTTF.woff2') format('woff2');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'AliceDigitalLearning';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_elice@1.0/EliceDigitalBaeum.woff2') format('woff2');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'AliceDigitalLearning';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_elice@1.0/EliceDigitalBaeum-Bd.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+
+        :root {
+            --bg-color: #0b0c10;
+            --neon-blue: #45f3ff;
+            --neon-pink: #ff007f;
+            --neon-green: #39ff14;
+            --neon-yellow: #ffea00;
+            --text-color: #c5c6c7;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-image: url("https://raw.githubusercontent.com/KOKIM12/k-marks-space-game/refs/heads/main/galaxy.png");
+            background-size: cover;
+            background-position: center;
+            color: white;
+            font-family: 'AliceDigitalLearning', sans-serif; 
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+            touch-action: manipulation; /* 모바일 더블탭 확대 방지 */
+        }
+
+        h1, h2, #hud, #combo-text, .char, #final-score {
+            font-family: 'KblJumpExtended', sans-serif;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 850px;
+            height: 100vh;
+            max-height: 800px;
+            background-image: linear-gradient(rgba(11, 12, 16, 0.85), rgba(11, 12, 16, 0.85)), url("https://raw.githubusercontent.com/KOKIM12/k-marks-space-game/refs/heads/main/galaxy.png");
+            background-size: cover;
+            background-position: center;
+            border: 3px solid var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+            box-sizing: border-box;
+            margin: 10px; /* 외부 최소 마진 추가 */
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0b0c10; /* 완전히 불투명하게 처리하여 뒷배경 보이지 않음 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            border-radius: 12px;
+        }
+
+        .modal-box {
+            background: #1f2833;
+            border: 2px solid var(--neon-blue);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(69, 243, 255, 0.5);
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: transparent;
+            color: var(--neon-blue);
+            border: 2px solid var(--neon-blue);
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'AliceDigitalLearning', sans-serif;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: 0.3s;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        /* 음악 제어 버튼 스타일 */
+        #mute-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            margin: 0;
+            padding: 6px 14px;
+            font-size: 14px;
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            border-radius: 20px;
+            z-index: 30;
+            box-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
+            background: rgba(11, 12, 16, 0.8);
+        }
+
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #home-btn {
+            padding: 5px 15px;
+            font-size: 14px;
+            margin: 0;
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+        #home-btn:hover {
+            background: var(--neon-pink);
+            color: white;
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        #in-game-rule {
+            flex-grow: 1;
+            text-align: right;
+            font-size: 14px;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 5px var(--neon-yellow);
+            font-weight: 700;
+            word-break: keep-all;
+        }
+
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            margin-top: 10px;
+            padding: 0 10px;
+        }
+
+        #combo-container {
+            position: absolute;
+            top: 48%; /* 겹치지 않게 판정 라인(32%)보다 하향 조정 */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--neon-pink);
+            text-shadow: 0 0 15px var(--neon-pink);
+            opacity: 0;
+            transition: transform 0.1s;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        #combo-text { font-size: 50px; margin-bottom: -10px; }
+        #combo-label { font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+
+        #stage {
+            position: relative;
+            flex-grow: 1;
+            margin: 15px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* 가로 판정선 영역 */
+        #hit-zone {
+            position: absolute;
+            bottom: 80px;
+            width: 100%;
+            height: 60px;
+            background: rgba(69, 243, 255, 0.08); /* 덜 헷갈리도록 흐리게 조절 */
+            border-top: 1px dashed rgba(69, 243, 255, 0.4);
+            border-bottom: 1px dashed rgba(69, 243, 255, 0.4);
+        }
+
+        #judgement-line {
+            position: absolute;
+            bottom: 110px; /* hit-zone의 정중앙 */
+            width: 100%;
+            height: 4px;
+            background-color: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+            z-index: 2;
+        }
+
+        .note {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 3;
+        }
+
+        .note-body {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            background: rgba(11, 12, 16, 0.75); /* 뒷 배경이 약간 비치는 투명 박스 */
+            border: 2px solid white;
+            border-radius: 15px;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            transition: transform 0.1s, border-color 0.1s;
+        }
+
+        .note-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px black;
+            text-align: center;
+            word-break: keep-all;
+            z-index: 2; /* 라인보다 위로 */
+        }
+
+        .note-target-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: var(--neon-pink);
+            box-shadow: 0 0 10px var(--neon-pink);
+            transform: translateY(-50%);
+            z-index: 1; /* 텍스트 아래에 정확히 겹침 */
+        }
+
+        /* 꾹 누르는 롱노트 테두리/캡 꼬리 스타일 */
+        .note-tail {
+            position: absolute;
+            bottom: calc(100% - 2px); /* 문장 박스 윗단에 고정 */
+            width: 16px;
+            background: linear-gradient(to top, var(--neon-green), rgba(57, 255, 20, 0.3));
+            box-shadow: 0 0 15px var(--neon-green);
+            border-radius: 8px 8px 0 0;
+            z-index: 0;
+        }
+
+        /* 롱노트 꼬리의 맨 끝을 표시하는 뚜껑(Cap) */
+        .note-tail-cap {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 12px;
+            background-color: var(--neon-yellow);
+            border-radius: 6px;
+            box-shadow: 0 0 15px var(--neon-yellow);
+            border: 2px solid white;
+        }
+
+        /* 길게 누르기 이펙트 */
+        .note-body.holding {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 25px var(--neon-yellow);
+            transform: scale(1.05);
+            background: rgba(255, 234, 0, 0.15);
+        }
+
+        /* 실패(틀림, 조기 입력) 흔들림 및 빨간색 강조 애니메이션 */
+        .note-body.failed {
+            border-color: var(--neon-pink) !important;
+            box-shadow: 0 0 25px var(--neon-pink) !important;
+            animation: subtleShake 0.3s ease-in-out;
+        }
+
+        @keyframes subtleShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        #keyboard-guide {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .key-btn {
+            flex: 1;
+            min-width: 65px;
+            max-width: 90px;
+            height: 75px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(69, 243, 255, 0.05);
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--neon-blue);
+            transition: 0.1s;
+        }
+
+        .key-btn .char { font-size: 28px; color: white; }
+        .key-btn .key { font-size: 13px; color: var(--neon-blue); margin-top: 3px; font-weight: 700; }
+
+        .key-btn.active {
+            background: var(--neon-blue);
+            transform: scale(0.92);
+            box-shadow: 0 0 25px var(--neon-blue);
+        }
+        .key-btn.active .char, .key-btn.active .key { color: black; }
+
+        #start-screen-spaceship {
+            width: 250px;
+            height: auto;
+            margin-bottom: 20px;
+            animation: startSpaceshipFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px var(--neon-blue));
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        @keyframes startSpaceshipFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        #judge-popup {
+            position: absolute;
+            top: 32%; /* 겹치지 않게 콤보 영역(48%)보다 상향 조정 */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            font-family: 'KblJumpExtended', sans-serif;
+            z-index: 10;
+            pointer-events: none;
+            animation: judgePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes judgePop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+        }
+
+        .judge-perfect { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); }
+        .judge-great { color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green); }
+        .judge-good { color: var(--neon-yellow); text-shadow: 0 0 15px var(--neon-yellow); }
+        .judge-bad { color: var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink); }
+        .judge-miss { color: #8a8d91; text-shadow: 0 0 10px #8a8d91; }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 5px 0;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 28px !important; }
+            #start-screen-spaceship { width: 180px; }
+            .note-text { font-size: 16px; }
+            .key-btn { height: 65px; }
+            .key-btn .char { font-size: 22px; }
+            #judgement-line { bottom: 100px; }
+            #hit-zone { bottom: 70px; height: 60px; }
+            #hud { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="overlay">
+        <button id="mute-btn" onclick="toggleMute()">🔊 소리 켜짐</button>
+        <img src="https://raw.githubusercontent.com/KOKIM12/k-marks-space-game/refs/heads/main/space.png" id="start-screen-spaceship" alt="게임 우주선 (K-Marks)">
+        
+        <!-- 타이틀 줄바꿈 및 "둠칫둠칫" 핑크 네온 컬러 강조 디자인 -->
+        <h1 style="font-size: 42px; margin-bottom: 5px; text-align: center; line-height: 1.35; letter-spacing: 2px;">
+            <span style="color: var(--neon-pink); text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 15px rgba(255, 0, 127, 0.8);">둠칫둠칫</span><br>
+            <span style="color: var(--neon-blue); text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 15px rgba(69, 243, 255, 0.7); font-size: 36px;">문장부호 스페이스</span>
+        </h1>
+        <p style="color: #ddd; margin-bottom: 25px; font-size: 16px; text-align: center; word-break: keep-all;">떨어지는 문장의 빈칸 ( &nbsp; )이<br>판정선에 닿을 때 알맞은 부호를 누르세요!</p>
+        
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-start" onclick="startGame()">게임 시작</button>
+            <button id="btn-rules" onclick="document.getElementById('rules-modal').style.display='flex'">게임 방법</button>
+        </div>
+    </div>
+
+    <!-- 룰 설명 팝업 -->
+    <div id="rules-modal" class="overlay" style="display: none; background: rgba(0,0,0,0.95);">
+        <div class="modal-box">
+            <h2 style="color: var(--neon-blue); font-size: 26px; margin-top: 0;">🚀 게임 방법</h2>
+            <p style="line-height: 1.8; color: #ddd; text-align: left; font-size: 15px; word-break: keep-all;">
+                1. 화면 위에서 문장과 함께 빈칸 <b>(  )</b>이 떨어집니다.<br>
+                2. 빈칸이 하단의 <b style="color:var(--neon-pink)">분홍색 판정선</b>에 닿는 순간, 문장에 어울리는 부호 키를 누르세요.<br>
+                3. PC에서는 <b style="color:var(--neon-blue)">느낌표(1), 쉼표(,), 마침표(.), 물음표(/)</b> 키를 사용합니다. (쉬프트 제외)<br>
+                4. 꼬리가 길게 달린 <b style="color:var(--neon-green)">[롱노트]</b>는 꼬리가 완전히 통과할 때까지 버튼을 <b>꾹~ 누르고</b> 있어야 합니다!<br>
+                5. 판정선에 <b>정확하게 맞출수록</b> 높은 등급과 함께 큰 점수를 얻습니다! (Perfect, Great, Good)<br>
+                6. <b>노트가 도달하기 전에 미리 누르면</b> 감점이 있으니 박자에 주의하세요!
+            </p>
+            <button id="btn-rules-close" onclick="document.getElementById('rules-modal').style.display='none'" style="margin-top: 15px;">닫기</button>
+        </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="gameover-screen" class="overlay" style="display: none;">
+        <h2 style="color: var(--neon-pink); text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 15px rgba(255, 0, 127, 0.6); font-size: 45px; margin-bottom: 10px;">탐사 종료!</h2>
+        <p id="final-score" style="font-size: 30px; margin-bottom: 20px; color: white; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);">최종 점수: 0점</p>
+        
+        <!-- 판정별 통계 리포트 -->
+        <div id="result-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; font-size: 18px; margin-bottom: 30px; width: 80%; max-width: 350px;">
+            <div class="stat-row"><span class="judge-perfect">PERFECT</span> <span id="stat-perfect" style="font-weight:700; color: white;">0</span></div>
+            <div class="stat-row"><span class="judge-great">GREAT</span> <span id="stat-great" style="font-weight:700; color: white;">0</span></div>
+            <div class="stat-row"><span class="judge-good">GOOD</span> <span id="stat-good" style="font-weight:700; color: white;">0</span></div>
+            <div class="stat-row"><span class="judge-bad">BAD</span> <span id="stat-bad" style="font-weight:700; color: white;">0</span></div>
+            <div class="stat-row" style="grid-column: span 2; justify-content: center; gap: 15px;"><span class="judge-miss">MISS</span> <span id="stat-miss" style="font-weight:700; color: white;">0</span></div>
+        </div>
+
+        <button id="btn-restart" onclick="resetToHome()">처음으로 돌아가기</button>
+    </div>
+
+    <!-- 상단 인터페이스 -->
+    <div id="top-bar">
+        <button id="home-btn" onclick="resetToHome()">🏠 처음으로</button>
+        <div id="in-game-rule">빈칸 ( &nbsp; )이 선에 닿을 때 입력! (긴 꼬리는 꾹 누르기)</div>
+    </div>
+    
+    <div id="hud">
+        <div id="score-display">SCORE: 0</div>
+        <div id="life-display">HP: ❤️❤️❤️❤️❤️</div>
+    </div>
+
+    <div id="combo-container">
+        <div id="combo-text">0</div>
+        <div id="combo-label">COMBO</div>
+    </div>
+
+    <!-- 플레이 스테이지 -->
+    <div id="stage">
+        <div id="hit-zone"></div>
+        <div id="judgement-line"></div>
+    </div>
+
+    <!-- 하단 조작부 -->
+    <div id="keyboard-guide">
+        <div class="key-btn" id="btn-excl" onmousedown="triggerInput('!')" onmouseup="releaseInput('!')" onmouseleave="releaseInput('!')" ontouchstart="triggerInput('!')" ontouchend="releaseInput('!')">
+            <span class="char">!</span><span class="key">느낌표(1)</span>
+        </div>
+        <div class="key-btn" id="btn-comma" onmousedown="triggerInput(',')" onmouseup="releaseInput(',')" onmouseleave="releaseInput(',')" ontouchstart="triggerInput(',')" ontouchend="releaseInput(',')">
+            <span class="char">,</span><span class="key">쉼표(,)</span>
+        </div>
+        <div class="key-btn" id="btn-dot" onmousedown="triggerInput('.')" onmouseup="releaseInput('.')" onmouseleave="releaseInput('.')" ontouchstart="triggerInput('.')" ontouchend="releaseInput('.')">
+            <span class="char">.</span><span class="key">마침표(.)</span>
+        </div>
+        <div class="key-btn" id="btn-qmark" onmousedown="triggerInput('?')" onmouseup="releaseInput('?')" onmouseleave="releaseInput('?')" ontouchstart="triggerInput('?')" ontouchend="releaseInput('?')">
+            <span class="char">?</span><span class="key">물음표(/)</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let audioCtx = null;
+    let score = 0;
+    let combo = 0;
+    const maxHp = 5;
+    let hp = maxHp;
+    let currentNotes = [];
+    let gameInterval = null;
+    let bpmInterval = null;
+    let isPlaying = false;
+    let isMuted = false;
+    
+    let baseNoteSpeed = 2.5; 
+    let noteSpeed = baseNoteSpeed;
+    let spawnInterval = 3800; 
+    let lastQuizIndex = -1;
+    let stats = { perfect: 0, great: 0, good: 0, bad: 0, miss: 0 };
+
+    /* 키 매핑 및 활성 상태 추적 */
+    const keyMap = { '1': '!', ',': ',', '.': '.', '/': '?' };
+    const btnMap = { '!': 'btn-excl', ',': 'btn-comma', '.': 'btn-dot', '?': 'btn-qmark' };
+    const activeHolds = {}; 
+
+    /* 인트로 비행 BGM 설정 */
+    const introBgm = new Audio('https://github.com/KOKIM12/k-marks-space-game/raw/refs/heads/main/Indigo_Horizon.mp3');
+    introBgm.loop = true;
+    introBgm.volume = 0.55; // 둠칫둠칫 풍부하게 들리도록 볼륨 설정
+
+    /* 50가지 다양한 문장 문제 데이터베이스 */
+    const quizData = [
+        { text: "우리는 도서관에서 책을 읽었다", ans: ".", type: "short" },
+        { text: "네가 정말 그걸 혼자 다 했다고", ans: "?", type: "short" },
+        { text: "우와, 저기 떨어지는 별똥별 좀 봐", ans: "!", type: "long" },
+        { text: "토끼는 빠르고 (  ) 거북이는 느리다", ans: ",", type: "short" },
+        { text: "오늘은 날씨가 매우 맑다", ans: ".", type: "short" },
+        { text: "주말에 가족들과 무엇을 할까", ans: "?", type: "short" },
+        { text: "아아, 대자연의 아름다움이여", ans: "!", type: "long" },
+        { text: "선생님께서 교실로 들어오셨다", ans: ".", type: "short" },
+        { text: "이 수학 문제 어떻게 푸는지 알아", ans: "?", type: "long" },
+        { text: "나는 오늘 사과 (  ) 포도를 먹었다", ans: ",", type: "short" },
+        { text: "밤하늘에 반짝이는 별이 아름답다", ans: ".", type: "short" },
+        { text: "앗, 내 지갑을 집에 두고 왔어", ans: "!", type: "short" },
+        { text: "내일 점심 메뉴는 무엇이 좋을까", ans: "?", type: "short" },
+        { text: "강아지가 꼬리를 흔들며 다가왔다", ans: ".", type: "long" },
+        { text: "정말 멋진 그림을 완성했구나", ans: "!", type: "short" },
+        { text: "지구가 태양 주위를 돈다", ans: ".", type: "short" },
+        { text: "너는 커서 어떤 사람이 되고 싶니", ans: "?", type: "short" },
+        { text: "야호, 드디어 기다리던 주말이다", ans: "!", type: "long" },
+        { text: "철수는 축구 (  ) 영희는 농구를 했다", ans: ",", type: "short" },
+        { text: "새들이 하늘을 자유롭게 날아간다", ans: ".", type: "short" },
+        { text: "오늘 숙제를 깜빡하고 안 가져왔어", ans: "!", type: "short" },
+        { text: "우리는 아침 일찍 산에 올랐다", ans: ".", type: "short" },
+        { text: "저 산 너머에는 무엇이 살고 있을까", ans: "?", type: "short" },
+        { text: "와, 정말 대단한 발견이군", ans: "!", type: "long" },
+        { text: "바람이 불고 (  ) 낙엽이 떨어진다", ans: ",", type: "short" },
+        { text: "진수는 책을 읽고 (  ) 민아는 그림을 그렸다", ans: ",", type: "short" },
+        { text: "대한민국의 수도는 서울이다", ans: ".", type: "short" },
+        { text: "누가 어지럽혀진 교실을 청소했을까", ans: "?", type: "short" },
+        { text: "휴, 하마터면 지각할 뻔했잖아", ans: "!", type: "short" },
+        { text: "우리는 매일 일기를 쓰기로 다짐했다", ans: ".", type: "long" },
+        { text: "꽃들이 활짝 피어 향기가 가득하다", ans: ".", type: "short" },
+        { text: "점심을 먹은 뒤에 도서관에 갈까", ans: "?", type: "short" },
+        { text: "이크, 발을 헛디딜 뻔했네", ans: "!", type: "short" },
+        { text: "어머니는 밥을 (  ) 아버지는 국을 푸셨다", ans: ",", type: "short" },
+        { text: "동생은 우유를 마시고 (  ) 나는 빵을 먹었다", ans: ",", type: "short" },
+        { text: "우주선이 먼 우주를 향해 나아간다", ans: ".", type: "long" },
+        { text: "너는 언제부터 피아노를 배우기 시작했니", ans: "?", type: "short" },
+        { text: "어머나, 이렇게 예쁜 꽃은 처음 봐", ans: "!", type: "long" },
+        { text: "비가 내리고 (  ) 천둥이 치기 시작했다", ans: ",", type: "short" },
+        { text: "우리는 평화롭고 아름다운 세상을 꿈꾼다", ans: ".", type: "short" },
+        { text: "네가 제일 좋아하는 계절은 언제니", ans: "?", type: "short" },
+        { text: "에구머니나, 깜짝 놀라라", ans: "!", type: "short" },
+        { text: "형은 고등학생이고 (  ) 누나는 중학생이다", ans: ",", type: "short" },
+        { text: "가을바람이 솔솔 불어와 시원하다", ans: ".", type: "short" },
+        { text: "내일 날씨가 좋으면 소풍을 갈 수 있을까", ans: "?", type: "long" },
+        { text: "심봤다, 드디어 산삼을 찾았어", ans: "!", type: "short" },
+        { text: "나비가 나풀나풀 꽃밭을 날아다닌다", ans: ".", type: "short" },
+        { text: "어제 산 책의 작가는 누구일까", ans: "?", type: "short" },
+        { text: "만세, 드디어 우리 팀이 승리했다", ans: "!", type: "long" },
+        { text: "오빠는 노래를 (  ) 언니는 춤을 추었다", ans: ",", type: "short" }
+    ];
+
+    let shuffledQueue = [];
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    /* 사운드 ON/OFF 토글 제어 */
+    function toggleMute() {
+        isMuted = !isMuted;
+        const muteBtn = document.getElementById('mute-btn');
+        if (isMuted) {
+            introBgm.volume = 0;
+            muteBtn.innerText = "🔇 소리 꺼짐";
+            muteBtn.style.borderColor = "var(--neon-pink)";
+            muteBtn.style.color = "var(--neon-pink)";
+        } else {
+            introBgm.volume = 0.55;
+            muteBtn.innerText = "🔊 소리 켜짐";
+            muteBtn.style.borderColor = "var(--neon-blue)";
+            muteBtn.style.color = "var(--neon-blue)";
+        }
+        playButtonSFX();
+    }
+
+    /* 브라우저 오토플레이 차단 극복: 최대한 자연스러운 자동 재생 트리거 */
+    window.addEventListener('DOMContentLoaded', () => {
+        const startAutoplay = () => {
+            initAudio();
+            const startScreen = document.getElementById('start-screen');
+            if (startScreen.style.display !== 'none' && introBgm.paused && !isPlaying && !isMuted) {
+                introBgm.play().catch(e => console.log("음악 자동재생 대기중:", e));
+            }
+        };
+        
+        // 최대한 빠른 실행을 위해 브라우저 첫 동작 감지에 바인딩
+        document.body.addEventListener('click', startAutoplay, { once: true });
+        document.body.addEventListener('touchstart', startAutoplay, { once: true });
+        document.body.addEventListener('keydown', startAutoplay, { once: true });
+        
+        // 로드 즉시 우선 시도
+        setTimeout(startAutoplay, 100);
+    });
+
+    /* SF 느낌의 버튼 클릭 효과음 생성 */
+    function playButtonSFX() {
+        if (isMuted) return;
+        initAudio();
+        if (!audioCtx) return;
+        
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    /* 화면 내 모든 버튼에 효과음 부착 */
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('mousedown', playButtonSFX);
+        btn.addEventListener('touchstart', playButtonSFX, {passive: true});
+    });
+
+    function playSound(freq, duration, type="sine", volume = 0.5) {
+        if (isMuted) return;
+        initAudio();
+        if(!audioCtx) return;
+        
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(volume * 0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function startBpmTicker() {
+        let beatCount = 0;
+        if(bpmInterval) clearInterval(bpmInterval);
+        
+        bpmInterval = setInterval(() => {
+            if (!isPlaying) return;
+            beatCount++;
+            if(beatCount % 4 === 1) playSound(250, 0.15, "triangle", 0.8); 
+            else playSound(150, 0.08, "sine", 0.5); 
+        }, 500); // 120 BPM (0.5초마다 1비트)
+    }
+
+    function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        isPlaying = true;
+        score = 0; combo = 0; hp = maxHp;
+        noteSpeed = baseNoteSpeed;
+        spawnInterval = 3800;
+        stats = { perfect: 0, great: 0, good: 0, bad: 0, miss: 0 };
+        
+        updateScoreUI();
+        document.getElementById('life-display').innerText = `HP: ❤️❤️❤️❤️❤️`;
+        
+        initAudio();
+        introBgm.pause();
+        introBgm.currentTime = 0;
+
+        shuffleArray(); 
+        startBpmTicker();
+        spawnNoteLoop();
+        requestAnimationFrame(updateGame);
+    }
+
+    function resetToHome() {
+        isPlaying = false;
+        clearAllIntervals();
+        currentNotes.forEach(note => note.element.remove());
+        currentNotes = [];
+        
+        document.getElementById('gameover-screen').style.display = 'none';
+        document.getElementById('start-screen').style.display = 'flex';
+        document.getElementById('life-display').innerText = `HP: ❤️❤️❤️❤️❤️`;
+        document.getElementById('score-display').innerText = `SCORE: 0`;
+        document.getElementById('combo-container').style.opacity = 0;
+
+        if (!isMuted) {
+            introBgm.play().catch(e => console.log(e));
+        }
+    }
+
+    function clearAllIntervals() {
+        if(gameInterval) {
+            clearInterval(gameInterval);
+            gameInterval = null;
+        }
+        if(bpmInterval) {
+            clearInterval(bpmInterval);
+            bpmInterval = null;
+        }
+    }
+
+    function shuffleArray() {
+        shuffledQueue = [...quizData];
+        for (let i = shuffledQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledQueue[i], shuffledQueue[j]] = [shuffledQueue[j], shuffledQueue[i]];
+        }
+    }
+
+    function getRandomNoteData() {
+        if (shuffledQueue.length === 0) {
+            shuffleArray();
+        }
+        return shuffledQueue.pop();
+    }
+
+    function spawnNoteLoop() {
+        if(gameInterval) clearInterval(gameInterval);
+        
+        gameInterval = setInterval(() => {
+            if (!isPlaying) return;
+            createNoteElement(getRandomNoteData());
+        }, spawnInterval); 
+    }
+
+    function createNoteElement(data) {
+        const stage = document.getElementById('stage');
+        const el = document.createElement('div');
+        el.className = 'note';
+        
+        let tailHeight = 150; 
+        let displayText = data.text;
+        
+        // 쉼표가 아니거나 텍스트에 이미 (  )가 들어있지 않으면 끝에 추가
+        if (data.ans !== ',' && !displayText.includes('(  )')) {
+            displayText += " (  )";
+        }
+
+        let tailHtml = '';
+        if (data.type === 'long') {
+            tailHtml = `
+                <div class="note-tail" style="height: ${tailHeight}px;">
+                    <div class="note-tail-cap"></div>
+                </div>
+            `;
+        }
+
+        el.innerHTML = `
+            <div class="note-body">
+                <div class="note-text">${displayText}</div>
+                <div class="note-target-line"></div>
+            </div>
+            ${tailHtml}
+        `;
+        
+        stage.appendChild(el);
+
+        currentNotes.push({
+            element: el,
+            boxElement: el.querySelector('.note-body'),
+            tailElement: el.querySelector('.note-tail'),
+            ans: data.ans,
+            type: data.type,
+            y: -150, 
+            isHeld: false,
+            holdTime: 0
+        });
+    }
+
+    function updateGame() {
+        if (!isPlaying) return;
+
+        const stageHeight = document.getElementById('stage').clientHeight;
+
+        for (let i = currentNotes.length - 1; i >= 0; i--) {
+            let note = currentNotes[i];
+            
+            // 롱노트 홀딩 진행 중
+            if (note.isHeld) {
+                score += 3; 
+                updateScoreUI();
+                
+                note.holdTime += 1;
+                let percent = note.holdTime / 60; // 60프레임 (약 1초 홀드 기준)
+                
+                if (note.tailElement) {
+                    note.tailElement.style.height = (150 * (1 - percent)) + 'px';
+                }
+                
+                note.boxElement.classList.add('holding');
+
+                // 완벽히 길게 누르기 유지 성공
+                if (note.holdTime >= 60) {
+                    hitSuccess(note, i, true, 'PERFECT');
+                }
+                continue; 
+            }
+
+            // 하강 물리 효과
+            note.y += noteSpeed; 
+            note.element.style.top = note.y + 'px';
+
+            // 완전히 화면을 이탈했을 때 MISS
+            const targetLineRect = document.getElementById('judgement-line').getBoundingClientRect();
+            const noteBodyRect = note.element.querySelector('.note-body').getBoundingClientRect();
+
+            if (noteBodyRect.top > targetLineRect.bottom + 20) {
+                handleMiss(note, i);
+            }
+        }
+        requestAnimationFrame(updateGame);
+    }
+
+    /* 판정 결과 표시 팝업 생성 */
+    function showJudgePopup(rating) {
+        const existing = document.getElementById('judge-popup');
+        if (existing) existing.remove();
+
+        const stage = document.getElementById('stage');
+        const pop = document.createElement('div');
+        pop.id = 'judge-popup';
+        pop.innerText = rating;
+        pop.className = 'judge-' + rating.toLowerCase();
+        stage.appendChild(pop);
+
+        setTimeout(() => {
+            pop.remove();
+        }, 500);
+    }
+
+    function triggerInput(inputChar) {
+        initAudio();
+        if (!inputChar) return;
+        const targetBtnId = btnMap[inputChar];
+        if(targetBtnId) document.getElementById(targetBtnId).classList.add('active');
+
+        if (!isPlaying) return;
+
+        // 노터(화면 위의 문장)가 없는데 조기 입력할 시 감점 페널티
+        if (currentNotes.length === 0) {
+            penaltyEarlyPress();
+            return;
+        }
+
+        // 가장 아래에 있는 노트(가장 y가 높은 것) 탐색
+        let lowestNoteIndex = -1;
+        let lowestNoteY = -Infinity;
+
+        for (let i = 0; i < currentNotes.length; i++) {
+            const note = currentNotes[i];
+            if (!note.isHeld && note.y > lowestNoteY) {
+                lowestNoteY = note.y;
+                lowestNoteIndex = i;
+            }
+        }
+
+        if (lowestNoteIndex === -1) return;
+
+        const note = currentNotes[lowestNoteIndex];
+        
+        // 정교한 물리 좌표 판정선과의 겹침 상태 계산 (getBoundingClientRect 기준)
+        const targetLineRect = document.getElementById('judgement-line').getBoundingClientRect();
+        const noteLineRect = note.element.querySelector('.note-target-line').getBoundingClientRect();
+        
+        const targetY = targetLineRect.top + targetLineRect.height / 2;
+        const noteY = noteLineRect.top + noteLineRect.height / 2;
+        const distance = Math.abs(targetY - noteY);
+
+        // 리듬 게임식 세부 판정 범위
+        if (distance <= 95) {
+            if (note.ans === inputChar) {
+                let rating = 'PERFECT';
+                if (distance <= 20) rating = 'PERFECT';
+                else if (distance <= 45) rating = 'GREAT';
+                else if (distance <= 70) rating = 'GOOD';
+                else rating = 'BAD';
+
+                if (note.type === 'long') {
+                    note.isHeld = true;
+                    note.boxElement.classList.add('holding');
+                    playSound(500, 0.1, "triangle");
+                } else {
+                    hitSuccess(note, lowestNoteIndex, false, rating);
+                }
+            } else {
+                handleWrong(note, lowestNoteIndex);
+            }
+        } else {
+            // 판정 범위 바깥인데 급하게 누른 경우 (조기 입력 페널티)
+            penaltyEarlyPress(note, lowestNoteIndex);
+        }
+    }
+
+    function releaseInput(inputChar) {
+        if (!inputChar) return;
+        const targetBtnId = btnMap[inputChar];
+        if(targetBtnId) document.getElementById(targetBtnId).classList.remove('active');
+        
+        activeHolds[inputChar] = false;
+
+        // 롱노트 누름 중단 체크
+        for (let i = currentNotes.length - 1; i >= 0; i--) {
+            let note = currentNotes[i];
+            if (note.isHeld && note.ans === inputChar) {
+                note.isHeld = false;
+                note.boxElement.classList.remove('holding');
+                
+                let progress = note.holdTime / 60;
+                if (progress >= 0.85) {
+                    let rating = 'PERFECT';
+                    if (progress >= 0.95) rating = 'PERFECT';
+                    else if (progress >= 0.90) rating = 'GREAT';
+                    else rating = 'GOOD';
+                    hitSuccess(note, i, true, rating);
+                } else {
+                    handleMiss(note, i);
+                }
+            }
+        }
+    }
+
+    function hitSuccess(note, index, isLongNote, rating) {
+        let ratingPoints = 100;
+        if (rating === 'PERFECT') {
+            stats.perfect++;
+            ratingPoints = 200;
+        } else if (rating === 'GREAT') {
+            stats.great++;
+            ratingPoints = 120;
+        } else if (rating === 'GOOD') {
+            stats.good++;
+            ratingPoints = 60;
+        } else {
+            stats.bad++;
+            ratingPoints = 10;
+            decreaseHp();
+        }
+
+        score += ratingPoints + (combo * 10);
+        if (rating !== 'BAD') {
+            combo++;
+        } else {
+            combo = 0;
+        }
+        
+        updateScoreUI();
+        showJudgePopup(rating);
+        
+        if (combo > 1) {
+            const comboContainer = document.getElementById('combo-container');
+            document.getElementById('combo-text').innerText = combo;
+            comboContainer.style.opacity = 1;
+            comboContainer.style.transform = 'translate(-50%, -50%) scale(1.3)';
+            setTimeout(() => { comboContainer.style.transform = 'translate(-50%, -50%) scale(1)'; }, 100);
+        } else {
+            document.getElementById('combo-container').style.opacity = 0;
+        }
+
+        // 스코어 비례 속도 소폭 점진 상승
+        if (score > 1000) {
+            noteSpeed = baseNoteSpeed + Math.min(2.0, (score - 1000) * 0.0003);
+        }
+
+        playSound(isLongNote ? 800 : 600, 0.15, "sine"); 
+        
+        // 정답을 맞추면 괄호 안의 문장 부호가 올바르게 드러남
+        const textNode = note.element.querySelector('.note-text');
+        if (textNode) {
+            textNode.innerHTML = textNode.innerHTML.replace('(  )', `<span style="color: var(--neon-blue); font-weight: bold;">( ${note.ans} )</span>`);
+        }
+        
+        note.boxElement.style.borderColor = 'var(--neon-blue)';
+        note.boxElement.style.background = 'rgba(11, 12, 16, 1)';
+        
+        note.element.style.transition = '0.3s';
+        note.element.style.transform = 'translateX(-50%) translateY(-30px) scale(1.1)';
+        note.element.style.opacity = '0';
+        
+        setTimeout(() => { note.element.remove(); }, 300);
+        currentNotes.splice(index, 1);
+    }
+
+    function handleWrong(note, index) {
+        stats.bad++;
+        combo = 0;
+        document.getElementById('combo-container').style.opacity = 0;
+        decreaseHp();
+        playSound(180, 0.2, "sawtooth");
+        showJudgePopup('BAD');
+
+        if (note) {
+            const body = note.element.querySelector('.note-body');
+            body.classList.add('failed');
+            setTimeout(() => { note.element.remove(); }, 300);
+            currentNotes.splice(index, 1);
+        }
+    }
+
+    function penaltyEarlyPress(note, index) {
+        stats.bad++;
+        combo = 0;
+        document.getElementById('combo-container').style.opacity = 0;
+        decreaseHp();
+        playSound(180, 0.2, "sawtooth");
+        showJudgePopup('BAD');
+
+        if (note) {
+            const body = note.element.querySelector('.note-body');
+            body.classList.add('failed');
+            setTimeout(() => { note.element.remove(); }, 300);
+            currentNotes.splice(index, 1);
+        }
+    }
+
+    function handleMiss(note, index) {
+        stats.miss++;
+        combo = 0;
+        document.getElementById('combo-container').style.opacity = 0;
+        decreaseHp();
+        playSound(120, 0.15, "square");
+        showJudgePopup('MISS');
+
+        if (note) {
+            note.element.remove();
+            currentNotes.splice(index, 1);
+        }
+    }
+
+    function decreaseHp() {
+        hp--;
+        let heartStr = "";
+        for(let i=0; i<maxHp; i++) {
+            heartStr += (i < hp) ? "❤️" : "🖤";
+        }
+        document.getElementById('life-display').innerText = `HP: ${heartStr}`;
+
+        if (hp <= 0) endGame();
+    }
+    
+    function updateScoreUI() {
+        document.getElementById('score-display').innerText = `SCORE: ${score}`;
+    }
+
+    function endGame() {
+        isPlaying = false;
+        clearAllIntervals();
+        
+        document.getElementById('gameover-screen').style.display = 'flex';
+        document.getElementById('final-score').innerText = `최종 점수: ${score}점`;
+        
+        // 상세 리포트 갱신
+        document.getElementById('stat-perfect').innerText = stats.perfect;
+        document.getElementById('stat-great').innerText = stats.great;
+        document.getElementById('stat-good').innerText = stats.good;
+        document.getElementById('stat-bad').innerText = stats.bad;
+        document.getElementById('stat-miss').innerText = stats.miss;
+    }
+
+    // 모바일 터치 이벤트 기본 동작 방지 (더블 탭 확대 등)
+    document.addEventListener('touchstart', function(event) {
+        if(event.target.closest('.key-btn')) {
+            event.preventDefault(); 
+        }
+    }, {passive: false});
+
+    window.addEventListener('keydown', (e) => {
+        if (e.repeat) return; 
+        const char = keyMap[e.key];
+        if (char) triggerInput(char);
+    });
+
+    window.addEventListener('keyup', (e) => {
+        const char = keyMap[e.key];
+        if (char) releaseInput(char);
+    });
+</script>
+
+</body>
+</html>
