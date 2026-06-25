@@ -48,6 +48,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            height: 100dvh; /* iOS Safari 하단 탭 가림 현상 방지 (동적 높이) */
             user-select: none;
             touch-action: manipulation; /* 모바일 더블탭 확대 방지 */
         }
@@ -62,7 +63,8 @@
             position: relative;
             width: 100%;
             max-width: 850px;
-            height: calc(100vh - 30px); /* 위아래 여백 확보 */
+            height: calc(100vh - 30px); /* 위아래 여백 확보 (구형 브라우저 호환성) */
+            height: calc(100dvh - 30px); /* 모바일 Safari 하단 탭 대응 */
             max-height: 800px;
             background-image: linear-gradient(rgba(11, 12, 16, 0.85), rgba(11, 12, 16, 0.85)), url("https://raw.githubusercontent.com/KOKIM12/k-marks-space-game/refs/heads/main/galaxy.png");
             background-size: cover;
@@ -93,6 +95,7 @@
         .full-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
+            height: 100dvh; /* 모바일 Safari 하단 탭 대응 */
             background: rgba(0, 0, 0, 0.7); /* 우주 배경 위에 살짝 검은색 필터 */
             display: flex;
             flex-direction: column;
@@ -410,6 +413,28 @@
             padding: 5px 0;
         }
 
+        /* 추가된 카운트다운 스타일 */
+        #countdown-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            font-family: 'KblJumpExtended', sans-serif;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 30px var(--neon-yellow);
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes countdownAnim {
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
         @media (max-width: 480px) {
             h1 { font-size: 28px !important; }
             #start-screen-spaceship { width: 180px; }
@@ -496,6 +521,8 @@
     <div id="stage">
         <div id="hit-zone"></div>
         <div id="judgement-line"></div>
+        <!-- 카운트다운 텍스트 추가 -->
+        <div id="countdown-display"></div>
     </div>
 
     <!-- 하단 조작부 -->
@@ -524,6 +551,9 @@
     let currentNotes = [];
     let gameInterval = null;
     let bpmInterval = null;
+    let spawnTimeout = null; // 동적 스폰용 타임아웃
+    let bpmTimeout = null;   // 동적 BPM용 타임아웃
+    let countdownInterval = null; // 카운트다운 타이머
     let isPlaying = false;
     let isMuted = false;
     
@@ -679,7 +709,8 @@
         let gain = audioCtx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(volume * 0.15, audioCtx.currentTime);
+        // 볼륨을 키워 둥둥 소리가 더 크게 들리도록 수정 (0.15 -> 0.35)
+        gain.gain.setValueAtTime(volume * 0.35, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -688,21 +719,28 @@
     }
 
     function startBpmTicker() {
-        let beatCount = 0;
-        if(bpmInterval) clearInterval(bpmInterval);
+        if (!isPlaying) return;
         
-        bpmInterval = setInterval(() => {
-            if (!isPlaying) return;
-            beatCount++;
-            if(beatCount % 4 === 1) playSound(250, 0.15, "triangle", 0.8); 
-            else playSound(150, 0.08, "sine", 0.5); 
-        }, 500); // 120 BPM (0.5초마다 1비트)
+        // 전역 변수로 관리되는 beatCount
+        if (typeof this.beatCount === 'undefined') this.beatCount = 0;
+        this.beatCount++;
+        
+        // 둥둥 소리를 더 강하게 출력
+        if(this.beatCount % 4 === 1) playSound(250, 0.15, "triangle", 1.2); 
+        else playSound(150, 0.1, "sine", 0.8); 
+        
+        // 점수에 비례해서 노트 속도가 빨라짐 -> BPM도 똑같이 빨라짐
+        let speedRatio = noteSpeed / baseNoteSpeed;
+        let currentInterval = 500 / speedRatio;
+        
+        if (bpmTimeout) clearTimeout(bpmTimeout);
+        bpmTimeout = setTimeout(startBpmTicker, currentInterval);
     }
 
     function startGame() {
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'flex';
-        isPlaying = true;
+        
         score = 0; combo = 0; hp = maxHp;
         noteSpeed = baseNoteSpeed;
         spawnInterval = 3800;
@@ -715,6 +753,52 @@
         introBgm.pause();
         introBgm.currentTime = 0;
 
+        startCountdown();
+    }
+
+    // 카운트다운 함수 새로 추가
+    function startCountdown() {
+        let count = 3;
+        const cdDisplay = document.getElementById('countdown-display');
+        cdDisplay.style.opacity = 1;
+        cdDisplay.style.color = "var(--neon-yellow)";
+        cdDisplay.style.textShadow = "0 0 30px var(--neon-yellow)";
+        
+        // 첫 숫자 즉시 표시
+        cdDisplay.innerText = count;
+        playSound(400, 0.2, "sine", 1.0);
+        cdDisplay.style.animation = 'none';
+        void cdDisplay.offsetWidth;
+        cdDisplay.style.animation = 'countdownAnim 0.9s ease-in-out forwards';
+        count--;
+
+        countdownInterval = setInterval(() => {
+            if (count > 0) {
+                cdDisplay.innerText = count;
+                playSound(400, 0.2, "sine", 1.0);
+                cdDisplay.style.animation = 'none';
+                void cdDisplay.offsetWidth;
+                cdDisplay.style.animation = 'countdownAnim 0.9s ease-in-out forwards';
+                count--;
+            } else if (count === 0) {
+                cdDisplay.innerText = "START!";
+                cdDisplay.style.color = "var(--neon-pink)";
+                cdDisplay.style.textShadow = "0 0 30px var(--neon-pink)";
+                playSound(800, 0.4, "sine", 1.5);
+                cdDisplay.style.animation = 'none';
+                void cdDisplay.offsetWidth;
+                cdDisplay.style.animation = 'countdownAnim 1s ease-in-out forwards';
+                count--;
+            } else {
+                clearInterval(countdownInterval);
+                cdDisplay.style.opacity = 0;
+                actualGameStart(); // START 직후 게임 시작!
+            }
+        }, 1000);
+    }
+
+    function actualGameStart() {
+        isPlaying = true;
         shuffleArray(); 
         startBpmTicker();
         spawnNoteLoop();
@@ -733,6 +817,8 @@
         document.getElementById('life-display').innerText = `HP: ❤️❤️❤️❤️❤️`;
         document.getElementById('score-display').innerText = `SCORE: 0`;
         document.getElementById('combo-container').style.opacity = 0;
+        
+        document.getElementById('countdown-display').style.opacity = 0;
 
         if (!isMuted) {
             introBgm.play().catch(e => console.log(e));
@@ -740,14 +826,16 @@
     }
 
     function clearAllIntervals() {
-        if(gameInterval) {
-            clearInterval(gameInterval);
-            gameInterval = null;
-        }
-        if(bpmInterval) {
-            clearInterval(bpmInterval);
-            bpmInterval = null;
-        }
+        if(gameInterval) clearInterval(gameInterval);
+        if(bpmInterval) clearInterval(bpmInterval);
+        if(countdownInterval) clearInterval(countdownInterval);
+        if(spawnTimeout) clearTimeout(spawnTimeout);
+        if(bpmTimeout) clearTimeout(bpmTimeout);
+        gameInterval = null; 
+        bpmInterval = null;
+        countdownInterval = null;
+        spawnTimeout = null;
+        bpmTimeout = null;
     }
 
     function shuffleArray() {
@@ -766,12 +854,17 @@
     }
 
     function spawnNoteLoop() {
-        if(gameInterval) clearInterval(gameInterval);
+        if (!isPlaying) return;
         
-        gameInterval = setInterval(() => {
-            if (!isPlaying) return;
-            createNoteElement(getRandomNoteData());
-        }, spawnInterval); 
+        // 첫 노트(문제)가 지연 없이 바로 생성되도록 수정
+        createNoteElement(getRandomNoteData());
+        
+        // 현재 속도 비율에 맞춰 다음 생성 주기 단축
+        let speedRatio = noteSpeed / baseNoteSpeed;
+        let currentSpawnInterval = spawnInterval / speedRatio;
+        
+        if(spawnTimeout) clearTimeout(spawnTimeout);
+        spawnTimeout = setTimeout(spawnNoteLoop, currentSpawnInterval);
     }
 
     function createNoteElement(data) {
